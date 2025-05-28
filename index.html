@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>كتيب الشرطة </title>
+    <title>كتيب الشرطة</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <!-- Application Structure Plan: 
@@ -454,7 +454,7 @@
                     <ol class="list-decimal list-inside space-y-2">
                         <li>يجب على الشرطي إبلاغ الشخص المعتقل بحقوق ميراندا (تم القبض عليك من شرطة Storm City بتهمة [نوع التهمة]. يحق لك التزام الصمت، أي شيء تقوله يستخدم ضدك في المحكمة، كما يحق لك توكيل محامٍ، وفي حال عدم قدرتك على توكيل محامٍ، توفر لك الولاية محامياً إن وجد).</li>
                         <li>إذا رغب المواطن في مساعدة قانونية، يمكنه الاستعانة بمحامٍ معتمد ليمثله ويساعده في تحليل الأدلة وتقديم الدفاع. هذا يضمن تمثيله الأمثل. كما يحق للمواطن التعرف على الأدلة المقدمة ضده دون محامٍ، خاصة إذا لم يكن متهماً بوضوح، مما يساعده على فهم القضية والمشاركة بفعالية في الدفاع عن حقوقه.</li>
-                        <li>عمليات التحقيق التي يقوم بها رجال الشرطة محدودة وفقاً للقوانين. لا يحق لرجل الشرطة استدعاء المواطن لتحقيق يزيد عن 30 دقيقة بدون موافقة المواطن (يجب خصم المدة من مدة السجن).</li>
+                        <li>لا يحق للعسكري التحقيق مع المواطن بمدة تزيد عن 30 دقيقة بدون موافقة المواطن (يجب خصم المدة من مدة السجن).</li>
                         <li>ينبغي لكل شرطي التعامل مع المواطن باحترام وتقدير، والالتزام بأخلاقيات المهنة وحقوق الإنسان. يجب أن يكونوا محترفين ولطفاء ومتجاوبين مع الجميع دون تمييز أو تحيز.</li>
                         <li>عند الوصول للزنزانات، على الشرطي الالتزام بأخلاقيات عمله وقوانين الحقوق المدنية، وإبلاغ المعتقل بوضوح وشفافية بتهمة الاعتقال وسببها.</li>
                         <li>يحق للمواطن طرد الشرطي من ممتلكاته الخاصة، إلا في حالات معينة مثل موقع جنائي، مذكرة تفتيش، أو بلاغ جنائي في الموقع.</li>
@@ -952,6 +952,13 @@
             sidebar.classList.add('-translate-x-full');
         });
 
+        // دالة لاستخراج النص النظيف من محتوى HTML
+        function getCleanTextFromHtml(htmlString) {
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = htmlString;
+            return tempDiv.textContent || tempDiv.innerText || "";
+        }
+
         // وظيفة استدعاء Gemini API
         async function callGeminiAPI() {
             const queryInput = document.getElementById('llm-query-input');
@@ -959,9 +966,9 @@
             const loadingIndicator = document.getElementById('llm-loading-indicator');
             const submitButton = document.getElementById('llm-submit-btn');
 
-            const prompt = queryInput.value.trim();
+            const userQuery = queryInput.value.trim();
 
-            if (!prompt) {
+            if (!userQuery) {
                 responseOutput.textContent = "الرجاء إدخال استفسارك.";
                 return;
             }
@@ -971,9 +978,27 @@
             responseOutput.textContent = ""; // مسح الرد السابق
 
             try {
+                let fullBookletContent = "";
+                for (const key in contentData) {
+                    if (contentData.hasOwnProperty(key)) {
+                        fullBookletContent += getCleanTextFromHtml(contentData[key]) + "\n\n";
+                    }
+                }
+
+                const prompt = `أنت خبير في كتيب إجراءات التشغيل القياسية لشرطة سان أندرياس.
+                **القواعد الهامة للإجابة:**
+                1.  **أجب فقط بناءً على المعلومات المتوفرة في الكتيب التالي.**
+                2.  **إذا كانت إجابة سؤال المستخدم غير موجودة أو غير واضحة في الكتيب، فأجب في سياق لعبة FiveM أو Grand Theft Auto (الحياة الواقعية).**
+                3.  اجابتك يجب أن تكون موجزة ومباشرة، ومرتبطة بإجراءات الشرطة.
+
+                **محتوى الكتيب:**
+                ${fullBookletContent}
+
+                **سؤال المستخدم:**
+                ${userQuery}`;
+
                 let chatHistory = [];
-                // يمكن تحسين هذا الموجه ليشمل مقتطفات من الكتيب إذا كان ذلك ممكناً دون تجاوز حدود الرمز المميز
-                chatHistory.push({ role: "user", parts: [{ text: `أنت خبير في كتيب إجراءات التشغيل القياسية لشرطة سان أندرياس. بناءً على معرفتك بهذا الكتيب، أجب على الاستفسار التالي: ${prompt}. اجابتك يجب أن تكون موجزة ومباشرة، ومرتبطة بإجراءات الشرطة.` }] });
+                chatHistory.push({ role: "user", parts: [{ text: prompt }] });
 
                 const payload = { contents: chatHistory };
                 const apiKey = "AIzaSyBmgwfd6KlrPbzN4H85jeB1NBupAqdHzAM"; // <--- ضع مفتاح API الخاص بك هنا
