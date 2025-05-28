@@ -1001,7 +1001,7 @@
                 chatHistory.push({ role: "user", parts: [{ text: prompt }] });
 
                 const payload = { contents: chatHistory };
-                const apiKey = "AIzaSyBmgwfd6KlrPbzN4H85jeB1NBupAqdHzAMv"; // <--- ضع مفتاح API الخاص بك هنا
+                const apiKey = "AIzaSyBmgwfd6KlrPbzN4H85jeB1NBupAqdHzAM"; // <--- ضع مفتاح API الخاص بك هنا
                 const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
 
                 const response = await fetch(apiUrl, {
